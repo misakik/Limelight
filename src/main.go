@@ -10,6 +10,10 @@ import (
 )
 
 var count int = 0
+type Data struct {
+  Name string
+  Size int64
+}
 
 func main() {
   flag.Parse()
@@ -21,24 +25,20 @@ func main() {
     root := flag.Arg(1)
     ero := filepath.Walk(root,
       func(path string, f os.FileInfo, err error) error {
-        fmt.Printf("Visited: %s : %d \n", path, count)
         count += 1
-        data := struct {
-          Name string
-        }{
-          Name: path,
-        }
+        size := f.Size()
+        fmt.Printf("%d : Name: %s : Size: %d \n", count, path, size)
+        data := Data{ Name: path, Size: size }
         index.Index(path, data)
         return nil
       })
     if ero != nil {
-        fmt.Println(err)
+        fmt.Println(ero)
         return
     }
 
     fmt.Printf("filepath.Walk() returned %v\n", err)
-    fmt.Printf("%d", count)
-    
+
   case "search":
     index, err := bleve.Open("example.bleve")
     if err != nil {
@@ -53,7 +53,6 @@ func main() {
         return
     }
     fmt.Println(searchResults)
-    fmt.Println(index)
   }
 
 }
