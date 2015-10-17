@@ -14,14 +14,18 @@ type Data struct {
   Name string
   Size int64
 }
+const IndexDir = ".tmp/index.data"
 
 func main() {
   flag.Parse()
 
   switch flag.Arg(0) {
   case "index" :
+    if _, err := os.Stat(IndexDir); err == nil {
+      os.RemoveAll(IndexDir)
+    }
     mapping := bleve.NewIndexMapping()
-    index, err := bleve.New(".tmp/index.data", mapping)
+    index, err := bleve.New(IndexDir, mapping)
     root := flag.Arg(1)
     ero := filepath.Walk(root,
       func(path string, f os.FileInfo, err error) error {
@@ -40,7 +44,7 @@ func main() {
     fmt.Printf("filepath.Walk() returned %v\n", err)
 
   case "search":
-    index, err := bleve.Open(".tmp/index.data")
+    index, err := bleve.Open(IndexDir)
     if err != nil {
         fmt.Println(err)
         return
