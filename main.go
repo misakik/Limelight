@@ -21,7 +21,7 @@ func main() {
   switch flag.Arg(0) {
   case "index" :
     mapping := bleve.NewIndexMapping()
-    index, err := bleve.New("example.bleve", mapping)
+    index, err := bleve.New(".tmp/index.data", mapping)
     root := flag.Arg(1)
     ero := filepath.Walk(root,
       func(path string, f os.FileInfo, err error) error {
@@ -40,7 +40,7 @@ func main() {
     fmt.Printf("filepath.Walk() returned %v\n", err)
 
   case "search":
-    index, err := bleve.Open("example.bleve")
+    index, err := bleve.Open(".tmp/index.data")
     if err != nil {
         fmt.Println(err)
         return
