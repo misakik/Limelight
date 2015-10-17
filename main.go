@@ -2,11 +2,10 @@ package main
 
 import (
     "fmt"
-    //"strconv"
-    "github.com/blevesearch/bleve"
     "path/filepath"
     "os"
     "flag"
+    "github.com/blevesearch/bleve"
 )
 
 var count int = 0
@@ -21,13 +20,20 @@ func main() {
 
   switch flag.Arg(0) {
   case "index" :
+    // Delete index directory if it already exists
     if _, err := os.Stat(IndexDir); err == nil {
       os.RemoveAll(IndexDir)
     }
+
     mapping := bleve.NewIndexMapping()
     index, err := bleve.New(IndexDir, mapping)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+
     root := flag.Arg(1)
-    ero := filepath.Walk(root,
+    error := filepath.Walk(root,
       func(path string, f os.FileInfo, err error) error {
         count += 1
         size := f.Size()
@@ -36,12 +42,12 @@ func main() {
         index.Index(path, data)
         return nil
       })
-    if ero != nil {
-        fmt.Println(ero)
+    if error != nil {
+        fmt.Println(err)
         return
     }
 
-    fmt.Printf("filepath.Walk() returned %v\n", err)
+    fmt.Printf("Index Done. %d items.\n", count)
 
   case "search":
     index, err := bleve.Open(IndexDir)
@@ -50,8 +56,8 @@ func main() {
         return
     }
     query := bleve.NewMatchQuery(flag.Arg(1))
-    search := bleve.NewSearchRequest(query)
-    searchResults, err := index.Search(search)
+    searchRequest := bleve.NewSearchRequest(query)
+    searchResults, err := index.Search(searchRequest)
     if err != nil {
         fmt.Println(err)
         return
