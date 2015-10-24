@@ -42,57 +42,64 @@ func main() {
     err = filepath.Walk(root,
       func(path string, f os.FileInfo, err error) error {
         count += 1
+
         size := f.Size()
+        text := ""
 
-        client := &http.Client{}
+        if !f.IsDir() {
+          client := &http.Client{}
 
-        url := "http://localhost:9998/tika"
+          bodyBuf := &bytes.Buffer{}
+          bodyWriter := multipart.NewWriter(bodyBuf)
 
-        bodyBuf := &bytes.Buffer{}
-        bodyWriter := multipart.NewWriter(bodyBuf)
+          fileWriter, err := bodyWriter.CreateFormFile("uploadfile", path)
+          if err != nil {
+              fmt.Println("error writing to buffer")
+              return err
+          }
 
-        fileWriter, err := bodyWriter.CreateFormFile("uploadfile", path)
-        if err != nil {
-            fmt.Println("error writing to buffer")
-            return err
-        }
+          fh, err := os.Open(path)
+          if err != nil {
+              fmt.Println("error opening file")
+              return err
+          }
+          defer fh.Close()
 
-        fh, err := os.Open(path)
-        if err != nil {
-            fmt.Println("error opening file")
-            return err
-        }
-        defer fh.Close()
+          _, err = io.Copy(fileWriter, fh)
+          if err != nil {
+              return err
+          }
 
-        _, err = io.Copy(fileWriter, fh)
-        if err != nil {
-            return err
-        }
+          //contentType := bodyWriter.FormDataContentType()
+          bodyWriter.Close()
 
-        //contentType := bodyWriter.FormDataContentType()
-        bodyWriter.Close()
+          url := "http://localhost:9998/tika"
+          request, err := http.NewRequest("PUT", url, bodyBuf)
+          if err != nil {
+            fmt.Println(err)
+            return nil
+          }
 
-        request, err := http.NewRequest("PUT", url, bodyBuf)
-        if err != nil {
-          fmt.Println(err)
-          return nil
-        }
+          request.Header.Set("Accept", "text/plain")
 
-        response, err := client.Do(request)
-        if err != nil {
-          fmt.Println(err)
-          return nil
-        }
+          response, err := client.Do(request)
+          if err != nil {
+            fmt.Println(err)
+            return nil
+          }
 
-        defer response.Body.Close()
-        text, err := ioutil.ReadAll(response.Body)
-        if err != nil {
-          fmt.Println(err)
-          return nil
+          defer response.Body.Close()
+          body, err := ioutil.ReadAll(response.Body)
+          if err != nil {
+            fmt.Println(err)
+            return nil
+          }
+          text = string(body)
+
         }
 
         fmt.Printf("%d : Name: %s : Size: %d : Text: %s \n", count, path, size, text)
-        data := Data{ Name: path, Size: size, Text: string(text)}
+        data := Data{ Name: path, Size: size, Text: text}
         index.Index(path, data)
         return nil
       })
