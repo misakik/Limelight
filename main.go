@@ -46,7 +46,7 @@ func main() {
         size := f.Size()
         text := ""
 
-        if !f.IsDir() {
+        if !f.IsDir() && size < 10000000 {
           client := &http.Client{}
 
           bodyBuf := &bytes.Buffer{}
