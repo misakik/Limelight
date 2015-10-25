@@ -10,6 +10,7 @@ import (
     "io"
     "io/ioutil"
     "mime/multipart"
+    "strings"
     "github.com/blevesearch/bleve"
 )
 
@@ -111,19 +112,60 @@ func main() {
     fmt.Printf("Index Done. %d items.\n", count)
 
   case "search":
-    index, err := bleve.Open(IndexDir)
+    result, err := Search(flag.Arg(1))
     if err != nil {
-        fmt.Println(err)
-        return
+      fmt.Println(err)
+      return
     }
-    query := bleve.NewMatchQuery(flag.Arg(1))
-    searchRequest := bleve.NewSearchRequest(query)
-    searchResults, err := index.Search(searchRequest)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    fmt.Println(searchResults)
-  }
+    fmt.Println(result)
 
+  case "server" :
+
+    // fmt.Println(searchResults.Hits[0].ID)
+    // fmt.Println(searchResults.Hits[0].Expl)
+    // fmt.Println(searchResults.Hits[0].Locations)
+    // fmt.Println(searchResults.Hits[0].Fragments)
+
+    http.HandleFunc("/", handler)
+    err := http.ListenAndServe(":8899", nil)
+    if err != nil {
+      fmt.Println(err)
+    }
+  }
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+  paths := strings.Split(r.URL.Path, "/")
+
+  if paths[1] == "search" {
+    result, err := Search(paths[2])
+    if err != nil {
+      fmt.Println(err)
+      return
+    }
+
+    fmt.Println(result)
+    if result.Total > 0 {
+      fmt.Fprintf(w, result.Hits[0].ID)
+    } else {
+      fmt.Fprintf(w, "No Result!")
+    }
+
+  } else {
+    fmt.Fprintf(w, "error!")
+  }
+}
+
+func Search(keyword string) (*bleve.SearchResult, error) {
+  index, err := bleve.Open(IndexDir)
+  if err != nil {
+      return nil, err
+  }
+  query := bleve.NewMatchQuery(keyword)
+  request := bleve.NewSearchRequest(query)
+  result, err := index.Search(request)
+  if err != nil {
+      return nil, err
+  }
+  return result, nil
 }
