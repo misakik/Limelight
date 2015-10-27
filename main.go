@@ -1,6 +1,7 @@
 package main
 
 import (
+    "encoding/json"
     "bytes"
     "fmt"
     "path/filepath"
@@ -140,9 +141,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
     }
 
     //See https://godoc.org/github.com/blevesearch/bleve#SearchResult
-    fmt.Println(result)
     if result.Total > 0 {
-      fmt.Fprintf(w, result.Hits[0].ID)
+      json, _ := json.Marshal(result)
+      fmt.Fprintf(w, string(json))
     } else {
       fmt.Fprintf(w, "No Result!")
     }
