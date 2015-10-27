@@ -121,11 +121,6 @@ func main() {
 
   case "server" :
 
-    // fmt.Println(searchResults.Hits[0].ID)
-    // fmt.Println(searchResults.Hits[0].Expl)
-    // fmt.Println(searchResults.Hits[0].Locations)
-    // fmt.Println(searchResults.Hits[0].Fragments)
-
     http.HandleFunc("/", handler)
     err := http.ListenAndServe(":8899", nil)
     if err != nil {
@@ -137,13 +132,14 @@ func main() {
 func handler(w http.ResponseWriter, r *http.Request) {
   paths := strings.Split(r.URL.Path, "/")
 
-  if paths[1] == "search" {
+  if paths[1] == "search" && len(paths[2]) > 0 {
     result, err := Search(paths[2])
     if err != nil {
       fmt.Println(err)
       return
     }
 
+    //See https://godoc.org/github.com/blevesearch/bleve#SearchResult
     fmt.Println(result)
     if result.Total > 0 {
       fmt.Fprintf(w, result.Hits[0].ID)
@@ -152,7 +148,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
     }
 
   } else {
-    fmt.Fprintf(w, "error!")
+    fmt.Fprintf(w, "Error!")
   }
 }
 
