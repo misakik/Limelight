@@ -12,6 +12,7 @@ import (
     "io/ioutil"
     "mime/multipart"
     "strings"
+    "time"
     "github.com/blevesearch/bleve"
 )
 
@@ -19,9 +20,12 @@ var count int = 0
 type Data struct {
   Name string
   Size int64
+  IsDir bool
+  ModTime time.Time
   Text string
 }
 const IndexDir = ".tmp/index.data"
+const TikaURL = "http://localhost:9998/tika"
 
 func main() {
   flag.Parse()
@@ -43,10 +47,18 @@ func main() {
     root := flag.Arg(1)
     err = filepath.Walk(root,
       func(path string, f os.FileInfo, err error) error {
+
+        // Skip hidden files
+        if strings.HasPrefix(f.Name(), ".") {
+            return nil
+        }
+
         count += 1
 
         size := f.Size()
         text := ""
+        isDir:= f.IsDir()
+        modTime := f.ModTime()
 
         if !f.IsDir() && size < 10000000 {
           client := &http.Client{}
@@ -75,8 +87,7 @@ func main() {
           //contentType := bodyWriter.FormDataContentType()
           bodyWriter.Close()
 
-          url := "http://localhost:9998/tika"
-          request, err := http.NewRequest("PUT", url, bodyBuf)
+          request, err := http.NewRequest("PUT", TikaURL, bodyBuf)
           if err != nil {
             fmt.Println(err)
             return nil
@@ -100,8 +111,8 @@ func main() {
 
         }
 
-        fmt.Printf("%d : Name: %s : Size: %d : Text: %s \n", count, path, size, text)
-        data := Data{ Name: path, Size: size, Text: text}
+        fmt.Printf("%d : Name: %s | Size: %d | IsDir: %t | ModTime: %s | Text: %t \n", count, path, size, isDir, modTime, (len(text) >0))
+        data := Data{ Name: path, Size: size, IsDir: isDir, ModTime: modTime, Text: text}
         index.Index(path, data)
         return nil
       })
@@ -123,7 +134,7 @@ func main() {
   case "server" :
 
     http.HandleFunc("/", handler)
-    err := http.ListenAndServe(":8899", nil)
+    err := http.ListenAndServe(":29134", nil)
     if err != nil {
       fmt.Println(err)
     }
@@ -140,7 +151,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
       return
     }
 
-    //See https://godoc.org/github.com/blevesearch/bleve#SearchResult
+
     if result.Total > 0 {
       json, _ := json.Marshal(result)
       fmt.Fprintf(w, string(json))
@@ -153,6 +164,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
   }
 }
 
+//See https://godoc.org/github.com/blevesearch/bleve#SearchResult
 func Search(keyword string) (*bleve.SearchResult, error) {
   index, err := bleve.Open(IndexDir)
   if err != nil {
