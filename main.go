@@ -26,6 +26,7 @@ type Data struct {
 }
 const IndexDir = ".tmp/index.data"
 const TikaURL = "http://localhost:9998/tika"
+const MinSize = 10000000
 
 func main() {
   flag.Parse()
@@ -60,7 +61,7 @@ func main() {
         isDir:= f.IsDir()
         modTime := f.ModTime()
 
-        if !f.IsDir() && size < 10000000 {
+        if !f.IsDir() && size < MinSize {
           client := &http.Client{}
 
           bodyBuf := &bytes.Buffer{}
