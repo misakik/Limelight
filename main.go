@@ -1,22 +1,23 @@
 package main
 
 import (
-    "encoding/json"
     "bytes"
-    "fmt"
-    "path/filepath"
-    "os"
+    "encoding/json"
     "flag"
-    "net/http"
+    "fmt"
     "io"
     "io/ioutil"
     "mime/multipart"
+    "net/http"
     "strings"
     "time"
+    "os"
+    "os/exec"
+    "path/filepath"
     "github.com/blevesearch/bleve"
+    //"github.com/gographics/imagick/imagick"
 )
 
-var count int = 0
 type Data struct {
   Name string
   Size int64
@@ -24,15 +25,30 @@ type Data struct {
   ModTime time.Time
   Text string
 }
+
 const IndexDir = ".tmp/index.data"
 const TikaURL = "http://localhost:9998/tika"
 const MinSize = 10000000
+const QLmanage = "/usr/bin/qlmanage"
+
+
+func makeThumb(path string) {
+  tmpdir, err := ioutil.TempDir("", "Limelight-")
+  if err != nil {
+    fmt.Println(err)
+    return
+  }
+  exec.Command(QLmanage, path, "-t", "-o", tmpdir).Run()
+  exec.Command("/usr/bin/open", tmpdir).Run()
+  fmt.Println(string(tmpdir))
+}
 
 func main() {
   flag.Parse()
 
   switch flag.Arg(0) {
   case "index" :
+    count := 0
     // Delete index directory if it already exists
     if _, err := os.Stat(IndexDir); err == nil {
       os.RemoveAll(IndexDir)
@@ -62,6 +78,9 @@ func main() {
         modTime := f.ModTime()
 
         if !f.IsDir() && size < MinSize {
+
+          makeThumb(path)
+
           client := &http.Client{}
 
           bodyBuf := &bytes.Buffer{}
@@ -110,6 +129,8 @@ func main() {
           }
           text = string(body)
 
+
+
         }
 
         fmt.Printf("%d : Name: %s | Size: %d | IsDir: %t | ModTime: %s | Text: %t \n", count, path, size, isDir, modTime, (len(text) >0))
@@ -133,7 +154,6 @@ func main() {
     fmt.Println(result)
 
   case "server" :
-
     http.HandleFunc("/", handler)
     err := http.ListenAndServe(":29134", nil)
     if err != nil {
