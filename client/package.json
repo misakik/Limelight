@@ -1,0 +1,16 @@
+{
+  "name": "Limelight",
+  "version": "0.0.1",
+  "main": "dist/main.js",
+  "devDependencies": {
+    "bower": "^1.6.5",
+    "coffee-loader": "^0.7.2",
+    "coffee-script": "^1.10.0",
+    "del": "^2.0.2",
+    "gulp": "^3.9.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-ruby-haml": "0.0.4",
+    "gulp-sass": "^2.1.0"
+  },
+  "dependencies": {}
+}
