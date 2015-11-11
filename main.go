@@ -38,9 +38,12 @@ func makeThumb(path string) {
     fmt.Println(err)
     return
   }
+  defer os.RemoveAll(tmpdir)
   exec.Command(QLmanage, path, "-t", "-o", tmpdir).Run()
   exec.Command("/usr/bin/open", tmpdir).Run()
   fmt.Println(string(tmpdir))
+
+  // Write here saving thumb
 }
 
 func main() {
