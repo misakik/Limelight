@@ -10,7 +10,7 @@ module.exports =
   target: 'atom'
   resolve:
     root: __dirname
-    extensions: ['', '.js', '.coffee', 'json', '.hamlc']
+    extensions: ['', '.js', '.coffee', '.json', '.hamlc']
     modulesDirectories: [
       'node_modules'
       'bower_components'

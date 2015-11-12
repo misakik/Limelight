@@ -2,19 +2,54 @@
   font-family: "SFNS Display", "Helvetica Neue", "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "游ゴシック", YuGothic, "メイリオ", Meiryo, sans-serif
   font-size: 14px
 
+body
+  margin: 0px
+  background-color: #FFFFFF
+  overflow: hidden
+
+ul
+  padding: 0px 10px
+
+.drag-area
+  width: 100%
+  height: 10px
+
 input.search
   width: 100%
+  height: 60px
+  padding: 0px 10px
   font-size: 40px
+  color: #13A061
+  background-color: #D4F1E4
+  &:focus
+    outline: none
+  border: none
 
 .hits
-  font-weight: bold
-  color: red
+  font-size: 36px
+  padding: 10px
+  text-align: right
+  color: #999999
+  position: absolute
+  top: 10px
+  right: 0px
+  width: 100px
+  height: 60px
 
 ul.result
+  overflow-y: auto
   li
+    padding: 3px 0px
+    .score-wrap
+      display: inline-block
+      width: 100px
+      overflow: hidden
+      vertical-align: middle
+      margin-right: 10px
     .score
-      color: green
-
-a[data-path]
-  text-decoration: underline
-  cursor: pointer
+      display: inline-block
+      background-color: #13A061
+      height: 12px
+    &:hover
+      cursor: pointer
+      background-color: #FFFCDF

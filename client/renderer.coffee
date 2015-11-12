@@ -1,6 +1,7 @@
 shell = require 'shell'
 
 search = $('input.search')
+hits   = $('.hits')
 result = $('ul.result')
 
 search.on 'keyup', ->
@@ -13,16 +14,18 @@ search.on 'keyup', ->
       success: (data) ->
         text = ""
         for path in data['hits']
-          text += "<li><span class=\"score\">#{path['score']}</span> : <a data-path=\"#{path['id']}\">#{path['id']}</a></li>"
+          text += "<li><div class=\"score-wrap\"><div class=\"score\" style=\"width: #{path['score'] * 75}px;\"></div></div><a data-path=\"#{path['id']}\">#{path['id']}</a></li>"
         if text.length > 0
           total_hits = data['total_hits']
           took = data['took']
-          text = "<div class=\"hits\">#{total_hits} hits, #{took} μsec</div>" + text
+          hits.html "#{total_hits}"
           result.html text
           $('a[data-path]').on 'click', ->
             console.log 'aa?'
             shell.showItemInFolder $(@).data('path')
         else
           result.html "No Result"
+          hits.html ""
   else
     result.html "Please input keyword"
+    hits.html ""
