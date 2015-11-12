@@ -13,3 +13,7 @@ input.search {
 
 ul.result li .score {
   color: green; }
+
+a[data-path] {
+  text-decoration: underline;
+  cursor: pointer; }
