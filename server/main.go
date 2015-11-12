@@ -180,18 +180,14 @@ func searchHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) 
     return
   }
 
-  if result.Total > 0 {
-    json, _ := json.Marshal(result)
-    fmt.Fprintf(w, string(json))
-  } else {
-    fmt.Fprintf(w, "No Result")
-  }
+  json, _ := json.Marshal(result)
+  fmt.Fprintf(w, string(json))
 }
 
 //See https://godoc.org/github.com/blevesearch/bleve#SearchResult
 func Search(keyword string) (*bleve.SearchResult, error) {
   fmt.Println(keyword)
-  
+
   query := bleve.NewMatchQuery(keyword)
   request := bleve.NewSearchRequest(query)
   result, err := LimeIndex.Search(request)
