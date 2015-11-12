@@ -1,14 +1,11 @@
 !!!
 %html
   %head
-    %meta{:charset => "UTF-8"}/
+    %meta{charset: 'UTF-8'}/
     %title Hello World!
+    %link{type: 'text/css', rel: 'stylesheet', href: 'main.css'}
+    :javascript
+      require('coffee-script/register')
+      require('./renderer.coffee')
   %body
-    %h1 Hello World!
-    We are using Node.js
-    :javascript
-      document.write(process.version)
-    and Electron
-    :javascript
-      document.write(process.versions['electron'])
-    \.
+    %input.search{placeholder: 'Search...', autofocus: 'autofocus'}

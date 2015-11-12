@@ -1,0 +1,24 @@
+{
+  "name": "Limelight",
+  "description": "",
+  "main": "dist/main.js",
+  "authors": [
+    "Misaki Kawamura <misaki@nekojarashi.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/misakik/Limelight",
+  "moduleType": [
+    "node"
+  ],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4"
+  }
+}
