@@ -2,3 +2,6 @@ example.bleve
 .tmp
 client/node_modules
 client/bower_components
+client/dist
+client/dist/index.html
+client/dist/renderer.js
