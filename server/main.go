@@ -190,6 +190,9 @@ func Search(keyword string) (*bleve.SearchResult, error) {
 
   query := bleve.NewMatchQuery(keyword)
   request := bleve.NewSearchRequest(query)
+  request.Size = 20
+  //request.Fields = []string{"Name", "Text", "Size", "IsDir", "ModTime"}
+
   result, err := LimeIndex.Search(request)
   if err != nil {
       return nil, err
