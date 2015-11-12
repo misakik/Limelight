@@ -3,6 +3,7 @@ gulp    = require 'gulp'
 sass    = require 'gulp-sass'
 concat  = require 'gulp-concat'
 haml    = require 'gulp-ruby-haml'
+webpack = require 'gulp-webpack'
 
 gulp.task 'clean', ->
   del ['./dist/**']
@@ -10,7 +11,6 @@ gulp.task 'clean', ->
 gulp.task 'copy', ->
   gulp.src [
     './*.js'
-    './*.coffee'
     ]
     .pipe gulp.dest './dist'
 
@@ -27,9 +27,9 @@ gulp.task 'compile-haml', ->
 
 gulp.task 'webpack', ->
   gulp.src './'
-  .pipe webpack require './webpack.config.coffee'
-  .pipe gulp.dest './dist'
+    .pipe webpack require './webpack.config.coffee'
+    .pipe gulp.dest './dist'
 
-gulp.task 'compile', ['copy', 'compile-sass', 'compile-haml']
+gulp.task 'compile', ['copy', 'webpack', 'compile-sass', 'compile-haml']
 
-gulp.task 'default', ['compile']
+gulp.task 'default', ['clean', 'compile']

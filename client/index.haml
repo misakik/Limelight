@@ -4,8 +4,8 @@
     %meta{charset: 'UTF-8'}/
     %title Hello World!
     %link{type: 'text/css', rel: 'stylesheet', href: 'main.css'}
-    :javascript
-      require('coffee-script/register')
-      require('./renderer.coffee')
   %body
     %input.search{placeholder: 'Search...', autofocus: 'autofocus'}
+  :javascript
+    window.$ = window.jQuery = require('../bower_components/jquery/dist/jquery.js');
+  %script{type: 'text/javascript', src: 'renderer.js'}
