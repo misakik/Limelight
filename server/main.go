@@ -16,6 +16,8 @@ import (
     "path/filepath"
     "github.com/blevesearch/bleve"
     //"github.com/gographics/imagick/imagick"
+    "github.com/guregu/kami"
+    "golang.org/x/net/context"
 )
 
 type Data struct {
@@ -31,6 +33,7 @@ const TikaURL = "http://localhost:9998/tika"
 const MinSize = 10000000
 const QLmanage = "/usr/bin/qlmanage"
 
+var LimeIndex bleve.Index
 
 func makeThumb(path string) {
   tmpdir, err := ioutil.TempDir("", "Limelight-")
@@ -82,7 +85,7 @@ func main() {
 
         if !f.IsDir() && size < MinSize {
 
-          makeThumb(path)
+          //makeThumb(path)
 
           client := &http.Client{}
 
@@ -157,46 +160,41 @@ func main() {
     fmt.Println(result)
 
   case "server" :
-    http.HandleFunc("/", handler)
-    err := http.ListenAndServe(":29134", nil)
-    if err != nil {
-      fmt.Println(err)
-    }
-  }
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-  paths := strings.Split(r.URL.Path, "/")
-
-  if paths[1] == "search" && len(paths[2]) > 0 {
-    result, err := Search(paths[2])
+    index, err := bleve.Open(IndexDir)
+    LimeIndex = index
     if err != nil {
       fmt.Println(err)
       return
     }
 
+    kami.Get("/search/:keyword", searchHandler)
+    kami.Serve()
+  }
+}
 
-    if result.Total > 0 {
-      json, _ := json.Marshal(result)
-      fmt.Fprintf(w, string(json))
-    } else {
-      fmt.Fprintf(w, "No Result!")
-    }
+func searchHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+  keyword := kami.Param(ctx, "keyword")
+  result, err := Search(keyword)
+  if err != nil {
+    fmt.Println(err)
+    return
+  }
 
+  if result.Total > 0 {
+    json, _ := json.Marshal(result)
+    fmt.Fprintf(w, string(json))
   } else {
-    fmt.Fprintf(w, "Error!")
+    fmt.Fprintf(w, "No Result")
   }
 }
 
 //See https://godoc.org/github.com/blevesearch/bleve#SearchResult
 func Search(keyword string) (*bleve.SearchResult, error) {
-  index, err := bleve.Open(IndexDir)
-  if err != nil {
-      return nil, err
-  }
+  fmt.Println(keyword)
+  
   query := bleve.NewMatchQuery(keyword)
   request := bleve.NewSearchRequest(query)
-  result, err := index.Search(request)
+  result, err := LimeIndex.Search(request)
   if err != nil {
       return nil, err
   }
