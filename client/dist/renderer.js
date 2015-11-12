@@ -49,7 +49,13 @@
 	search = $('input.search');
 
 	search.on('keyup', function() {
-	  return console.log($(this).val());
+	  return $.ajax({
+	    url: 'http://localhost:29134/search/' + $(this).val(),
+	    dataType: 'json',
+	    success: function(data) {
+	      return console.log(data);
+	    }
+	  });
 	});
 
 
