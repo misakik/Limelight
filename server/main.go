@@ -2,6 +2,7 @@ package main
 
 import (
     "bytes"
+    "crypto/sha1"
     "encoding/json"
     "flag"
     "fmt"
@@ -18,9 +19,10 @@ import (
     //"github.com/gographics/imagick/imagick"
     "github.com/guregu/kami"
     "golang.org/x/net/context"
+    "gopkg.in/redis.v3"
 )
 
-type Data struct {
+type IndexData struct {
   Name string
   Size int64
   IsDir bool
@@ -28,14 +30,30 @@ type Data struct {
   Text string
 }
 
+type MetaData struct {
+  IsDir bool
+  Size int64
+  ModTime time.Time
+  Hash string
+}
+
 const IndexDir = ".tmp/index.data"
 const TikaURL = "http://localhost:9998/tika"
-const MinSize = 10000000
+const MinFileSize = 10000000
 const QLmanage = "/usr/bin/qlmanage"
 
 var LimeIndex bleve.Index
+//var RedisClient redis.Client
 
-func makeThumb(path string) {
+func init() {
+
+
+  //RedisClient.FlushAll()
+  //fmt.Println("Flushed DB No.9")
+}
+
+// Create thumbnail from path.
+func MakeThumb(path string) (image []byte) {
   tmpdir, err := ioutil.TempDir("", "Limelight-")
   if err != nil {
     fmt.Println(err)
@@ -43,10 +61,49 @@ func makeThumb(path string) {
   }
   defer os.RemoveAll(tmpdir)
   exec.Command(QLmanage, path, "-t", "-o", tmpdir).Run()
-  exec.Command("/usr/bin/open", tmpdir).Run()
-  fmt.Println(string(tmpdir))
 
   // Write here saving thumb
+  return nil
+}
+
+
+func WriteMetaData(path string, f os.FileInfo) (error) {
+  size := f.Size()
+  isDir:= f.IsDir()
+  modTime := f.ModTime()
+
+  var result []byte
+  file, err := os.Open(path)
+  if err != nil {
+    return err
+  }
+  defer file.Close()
+
+  hash := sha1.New()
+  if _, err := io.Copy(hash, file); err != nil {
+    return err
+  }
+
+  s := hash.Sum(result)
+
+  data := MetaData{IsDir: isDir, Size: size, ModTime: modTime, Hash: fmt.Sprintf("%x", s)}
+  json, _ := json.Marshal(data)
+
+  RedisClient := redis.NewClient(&redis.Options{
+      Addr:     "localhost:16379",
+      Password: "", // no password set
+      DB:       9,  // use DB No.9
+  })
+  defer RedisClient.Close()
+
+  ero := RedisClient.Set(path, json, 0).Err()
+  if ero != nil {
+      panic(ero)
+  }
+
+  fmt.Printf("%s : %x\n", path, s)
+
+  return nil
 }
 
 func main() {
@@ -83,9 +140,13 @@ func main() {
         isDir:= f.IsDir()
         modTime := f.ModTime()
 
-        if !f.IsDir() && size < MinSize {
+        if !f.IsDir() && size < MinFileSize {
 
-          //makeThumb(path)
+          err := WriteMetaData(path, f)
+          if err != nil {
+            fmt.Println("error writing meta data")
+            return err
+          }
 
           client := &http.Client{}
 
@@ -139,8 +200,8 @@ func main() {
 
         }
 
-        fmt.Printf("%d : Name: %s | Size: %d | IsDir: %t | ModTime: %s | Text: %t \n", count, path, size, isDir, modTime, (len(text) >0))
-        data := Data{ Name: path, Size: size, IsDir: isDir, ModTime: modTime, Text: text}
+        //fmt.Printf("%d : Name: %s | Size: %d | IsDir: %t | ModTime: %s | Text: %t \n", count, path, size, isDir, modTime, (len(text) >0))
+        data := IndexData{Name: path, Size: size, IsDir: isDir, ModTime: modTime, Text: text}
         index.Index(path, data)
         return nil
       })
